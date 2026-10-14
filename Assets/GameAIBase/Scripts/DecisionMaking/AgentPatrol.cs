@@ -8,22 +8,22 @@ namespace GameAIBase
         // Visit these points in the order assigned.
         [SerializeField] private Transform[] patrolPoints;
 
-        // Time spent waiting at each point.
+        // Seconds to wait at each point.
         [SerializeField, Min(0f)] private float waitTime = 1f;
 
         private AgentMovement movement;
         private int currentPointIndex = 0;
         private float waitTimer = 0f;
+        private bool isPaused = false;
 
         private void Awake()
         {
-            // Use the movement component on this same object.
             movement = GetComponent<AgentMovement>();
         }
 
         private void Start()
         {
-            // Stop safely if no route has been assigned.
+            // Stop safely if no starting point is assigned.
             if (patrolPoints == null || patrolPoints.Length == 0)
             {
                 movement.Stop();
@@ -43,13 +43,16 @@ namespace GameAIBase
 
         private void Update()
         {
+            if (isPaused)
+                return;
+
             if (patrolPoints == null || patrolPoints.Length == 0)
                 return;
 
             if (!movement.HasReachedTarget())
                 return;
 
-            // Pause at the current point.
+            // Wait before moving to the next point.
             movement.Stop();
             waitTimer += Time.deltaTime;
 
@@ -58,7 +61,7 @@ namespace GameAIBase
 
             waitTimer = 0f;
 
-            // After the last point, return to the first.
+            // Wrap back to the first point after the last.
             currentPointIndex = (currentPointIndex + 1) % patrolPoints.Length;
 
             if (patrolPoints[currentPointIndex] == null)
@@ -72,7 +75,32 @@ namespace GameAIBase
             movement.Resume();
         }
 
-        // Show the points and the route connecting them.
+        // Let another behaviour take control of movement.
+        public void PausePatrol()
+        {
+            isPaused = true;
+            waitTimer = 0f;
+        }
+
+        // Continue toward the point we were heading to.
+        public void ResumePatrol()
+        {
+            if (patrolPoints == null || patrolPoints.Length == 0)
+                return;
+
+            if (currentPointIndex >= patrolPoints.Length)
+                currentPointIndex = 0;
+
+            if (patrolPoints[currentPointIndex] == null)
+                return;
+
+            waitTimer = 0f;
+            movement.SetTarget(patrolPoints[currentPointIndex]);
+            movement.Resume();
+            isPaused = false;
+        }
+
+        // Draw the route when the agent is selected.
         private void OnDrawGizmosSelected()
         {
             if (patrolPoints == null || patrolPoints.Length == 0)

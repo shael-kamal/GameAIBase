@@ -463,6 +463,8 @@ GameObject:
   - component: {fileID: 499192165}
   - component: {fileID: 499192169}
   - component: {fileID: 499192170}
+  - component: {fileID: 499192171}
+  - component: {fileID: 499192172}
   m_Layer: 0
   m_Name: Agent
   m_TagString: Untagged
@@ -601,6 +603,33 @@ MonoBehaviour:
   - {fileID: 1391185791}
   - {fileID: 566943634}
   waitTime: 1
+--- !u!114 &499192171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 499192164}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0afe6ba2874c4804d8e36b445d38884e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameAIBase.AgentSensor
+  target: {fileID: 1405732659}
+  detectionRange: 5
+--- !u!114 &499192172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 499192164}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ff878244f048514ba34f9c19fc42e52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameAIBase.AgentBrain
+  currentState: 0
 --- !u!1 &566943633
 GameObject:
   m_ObjectHideFlags: 0
