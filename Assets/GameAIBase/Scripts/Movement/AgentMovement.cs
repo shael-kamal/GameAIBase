@@ -68,6 +68,18 @@ namespace GameAIBase
             isStopped = false;
         }
 
+        // Check arrival using the same height and stopping distance as movement.
+        public bool HasReachedTarget()
+        {
+            if (target == null)
+                return false;
+
+            Vector3 destination = target.position;
+            destination.y = transform.position.y;
+
+            return Vector3.Distance(transform.position, destination) <= stoppingDistance + 0.01f;
+        }
+
         // Show movement guides when this agent is selected.
         private void OnDrawGizmosSelected()
         {
