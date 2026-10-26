@@ -36,7 +36,7 @@ namespace GameAIBase
             }
             else if (currentState == AgentState.Chase)
             {
-                if (!sensor.IsTargetInRange())
+                if (!sensor.IsTargetInChaseRange())
                     ReturnToPatrol();
             }
         }
