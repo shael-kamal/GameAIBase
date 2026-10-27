@@ -10,6 +10,10 @@ namespace GameAIBase
         [SerializeField, Min(0f)] private float detectionRange = 5f;
         // Keep chasing until the target leaves this larger range.
         [SerializeField, Min(0f)] private float loseTargetRange = 8f;
+        // Total viewing angle. 120 means 60 degrees on each side.
+        [SerializeField, Range(0f, 360f)] private float viewAngle = 120f;
+        // Only objects on these layers can block sight.
+        [SerializeField] private LayerMask wallMask;
 
         public Transform Target => target;
 
@@ -18,11 +22,22 @@ namespace GameAIBase
             if (target == null)
                 return false;
 
-            // Measure horizontal distance for our ground-based agents.
             Vector3 offset = target.position - transform.position;
             offset.y = 0f;
 
-            return offset.sqrMagnitude <= detectionRange * detectionRange;
+            if (offset.sqrMagnitude > detectionRange * detectionRange)
+                return false;
+
+            // A target at the same position counts as detected.
+            if (offset.sqrMagnitude < 0.0001f)
+                return true;
+
+            Vector3 forward = transform.forward;
+            forward.y = 0f;
+
+            float angle = Vector3.Angle(forward, offset);
+
+            return angle <= viewAngle * 0.5f && HasClearSight();
         }
 
         public bool IsTargetInChaseRange()
@@ -50,6 +65,27 @@ namespace GameAIBase
 
             float chaseRange = Mathf.Max(detectionRange, loseTargetRange);
             Gizmos.DrawWireSphere(transform.position, chaseRange);
+
+            // Draw the left and right edges of the viewing angle.
+            Vector3 forward = transform.forward;
+            forward.y = 0f;
+            forward.Normalize();
+
+            Vector3 left = Quaternion.AngleAxis(-viewAngle * 0.5f, Vector3.up) * forward;
+            Vector3 right = Quaternion.AngleAxis(viewAngle * 0.5f, Vector3.up) * forward;
+
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawRay(transform.position, left * detectionRange);
+            Gizmos.DrawRay(transform.position, right * detectionRange);
+        }
+
+        public bool HasClearSight()
+        {
+            if (target == null)
+                return false;
+
+            // Check the actual line from the agent's centre to the target.
+            return !Physics.Linecast(transform.position, target.position, wallMask, QueryTriggerInteraction.Ignore);
         }
     }
 }

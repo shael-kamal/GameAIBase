@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace GameAIBase
 {
+    [RequireComponent(typeof(CharacterController))]
     public class AgentMovement : MonoBehaviour
     {
         // The object our agent will follow.
@@ -18,6 +19,12 @@ namespace GameAIBase
 
         // Whether movement is paused.
         [SerializeField] private bool isStopped = false;
+
+        private CharacterController controller;
+        private void Awake()
+        {
+            controller = GetComponent<CharacterController>();
+        }
 
         private void Update()
         {
@@ -47,7 +54,9 @@ namespace GameAIBase
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
             }
 
-            transform.position = Vector3.MoveTowards(transform.position, destination, step);
+            // Move through the controller so walls can block us.
+            Vector3 nextPosition = Vector3.MoveTowards(transform.position, destination, step);
+            controller.Move(nextPosition - transform.position);
         }
 
         // Give the agent a different target.

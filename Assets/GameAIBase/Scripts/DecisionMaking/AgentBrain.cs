@@ -17,6 +17,12 @@ namespace GameAIBase
         private AgentMovement movement;
         private AgentPatrol patrol;
         private AgentSensor sensor;
+        // How long we keep chasing after sight is blocked.
+        [SerializeField, Min(0f)] private float lostSightDelay = 2f;
+
+        private float lostSightTimer = 0f;
+        // An invisible destination that remembers the last sighting.
+        private Transform lastSeen;
 
         private void Awake()
         {
@@ -25,6 +31,8 @@ namespace GameAIBase
             sensor = GetComponent<AgentSensor>();
 
             currentState = AgentState.Patrol;
+            lastSeen = new GameObject(name + "_LastSeen").transform;
+            lastSeen.position = transform.position;
         }
 
         private void Update()
@@ -36,17 +44,40 @@ namespace GameAIBase
             }
             else if (currentState == AgentState.Chase)
             {
+                // Leaving chase range ends the chase immediately.
                 if (!sensor.IsTargetInChaseRange())
+                {
                     ReturnToPatrol();
+                    return;
+                }
+
+                if (sensor.HasClearSight())
+                {
+                    lostSightTimer = 0f;
+
+                    // Only update the destination while sight is clear.
+                    lastSeen.position = sensor.Target.position;
+                }
+                else
+                {
+                    lostSightTimer += Time.deltaTime;
+
+                    if (lostSightTimer >= lostSightDelay)
+                        ReturnToPatrol();
+                }
             }
         }
 
         private void BeginChase()
         {
-            // Pause the route so it doesn't overwrite the chase target.
+            lostSightTimer = 0f;
+
             patrol.PausePatrol();
 
-            movement.SetTarget(sensor.Target);
+            // Record where we first spotted the target.
+            lastSeen.position = sensor.Target.position;
+
+            movement.SetTarget(lastSeen);
             movement.Resume();
 
             currentState = AgentState.Chase;
@@ -54,10 +85,18 @@ namespace GameAIBase
 
         private void ReturnToPatrol()
         {
+            lostSightTimer = 0f;
             // Continue toward the patrol point we left.
             patrol.ResumePatrol();
 
             currentState = AgentState.Patrol;
+        }
+
+        private void OnDestroy()
+        {
+            // Remove the temporary marker when this agent is destroyed.
+            if (lastSeen != null)
+                Destroy(lastSeen.gameObject);
         }
     }
 }
